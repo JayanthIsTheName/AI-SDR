@@ -54,7 +54,7 @@ class CSVUploadView(APIView):
             # ----- twilio settings --------
             # Your Account SID and Auth Token from console.twilio.com
             account_sid = os.getenv('TWILIO_ACCOUNT_SID')
-            # auth_token  = '43a9ebbd32b761123d9e657d49542fb1'
+            auth_token  = os.getenv("TWILIO_AUTH_TOKEN")
             # client = Client(account_sid, auth_token)
 
             # verification = client.verify \
