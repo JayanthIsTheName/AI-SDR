@@ -6,6 +6,7 @@ import io
 import requests
 from twilio.rest import Client
 import os
+import json
 
 
 class CSVUploadView(APIView):
@@ -45,20 +46,6 @@ class CSVUploadView(APIView):
                 'Authorization': f'Bearer {vapi_auth_token}',
                 'Content-Type': 'application/json',
             }
-
-            # ----- twilio settings --------
-            # Your Account SID and Auth Token from console.twilio.com
-            twilio_account_sid = os.getenv('TWILIO_ACCOUNT_SID')
-            twilio_auth_token = os.getenv("TWILIO_AUTH_TOKEN")
-            # client = Client(account_sid, auth_token)
-
-            # verification = client.verify \
-            #     .v2 \
-            #     .services('VAc1ae47c07e6fc3da97d87ef5cab6695d') \
-            #     .verifications \
-            #     .create(to='+917989409481', channel='sms')
-
-            # print(verification.sid)
 
             # Process each row
             for row in csv_data:
@@ -110,53 +97,78 @@ class SendOtp(APIView):
         twilio_account_sid = os.getenv('TWILIO_ACCOUNT_SID')
         twilio_auth_token = os.getenv("TWILIO_AUTH_TOKEN")
         twilio_otp_service_id = os.getenv("TWILIO_OTP_SERVICE_ID")
+
         client = Client(twilio_account_sid, twilio_auth_token)
-        # number = request.data["function"]["parameters"]
+
+        number = request.data["message"]["toolCalls"][0]["function"]["arguments"]["number"]
+        initial_digits = number[0:3]
+        if (initial_digits != "+91"):
+            number = "+91"+number
+        print("sending otp to : "  + number)
         
+        toolCallId = request.data["message"]["toolCalls"][0]["id"]
+
         try:
             otp_verification = client.verify.v2.services(twilio_otp_service_id).verifications.create(
-                to = "+917989409481", channel="sms"
+                to= number, channel="sms"
             )
-            
+
             return Response(
-                    {'response': "otp has been generated"},
-                    status=status.HTTP_200_OK
+                {
+                    "results": [
+                        {
+                            "toolCallId" : toolCallId,
+                            "result": "otp sent successfully"
+                        }
+                    ]
+                },
+                status=status.HTTP_200_OK
             )
-            
+
         except Exception as e:
             return Response(
                 {'response': {e}},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )  
-            
-              
+            )
+
+
 class VerifyOtp(APIView):
     def post(self, request):
         twilio_account_sid = os.getenv('TWILIO_ACCOUNT_SID')
         twilio_auth_token = os.getenv("TWILIO_AUTH_TOKEN")
         twilio_otp_service_id = os.getenv("TWILIO_OTP_SERVICE_ID")
-        
+
         client = Client(twilio_account_sid, twilio_auth_token)
-        # number = request.data["function"]["parameters"]
-        # otp_code = request.data["function"]["parameters"]
         
-        otp_code = int(request.data["number"])
+        otp_code = int(request.data["message"]["toolCalls"][0]["function"]["arguments"]["otp"])
+        number = request.data["message"]["toolCalls"][0]["function"]["arguments"]["number"]
+        initial_digits = number[0:3]
+        if (initial_digits != "+91"):
+            number = "+91"+number
+        print("verifying : "  + number)
         
+        toolCallId = request.data["message"]["toolCalls"][0]["id"]
+
+
         try:
             otp_check = client.verify.v2.services(twilio_otp_service_id).verification_checks.create(
-                to = "+917989409481", code=otp_code
+                to= number, code=otp_code
             )
-            
+
             return Response(
-                    {'response': otp_check.status},
-                    status=status.HTTP_200_OK
+                {
+                    "results": [
+                        {
+                            "toolCallId" : toolCallId,
+                            "result": "otp verified successfully"
+                        }
+                    ]
+                },
+                status=status.HTTP_200_OK
             )
-            
+
         except Exception as e:
             return Response(
                 {'response': {e}},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )    
-            
-       
-
+            )

@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-1p7xy%$7ori*7o9e-f7#jr6u_v_c%@k!$%#8+fqq5w%1yb+w!!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -128,10 +128,12 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React development server
-    "http://your-s3-bucket-url.s3-website.region.amazonaws.com",  # Replace with your S3 bucket URL
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",  # React development server
+#     "http://your-s3-bucket-url.s3-website.region.amazonaws.com",  # Replace with your S3 bucket URL
+# ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_METHODS = [
     'DELETE',
