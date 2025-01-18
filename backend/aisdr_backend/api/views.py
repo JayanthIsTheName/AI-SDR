@@ -35,21 +35,21 @@ class CSVUploadView(APIView):
             # ----- Vapi settings -------
 
             # Your Vapi API Authorization token
-            auth_token = os.getenv("VAPI_AUTH_TOKEN")
+            vapi_auth_token = os.getenv("VAPI_AUTH_TOKEN")
             assisstant_id = os.getenv("VAPI_ASSISSTANT_ID")
             # The Phone Number ID, and the Customer details for the call
             phone_number_id = os.getenv("VAPI_PHONE_ID")
 
             # Create the header with Authorization token
             headers = {
-                'Authorization': f'Bearer {auth_token}',
+                'Authorization': f'Bearer {vapi_auth_token}',
                 'Content-Type': 'application/json',
             }
 
             # ----- twilio settings --------
             # Your Account SID and Auth Token from console.twilio.com
-            account_sid = os.getenv('TWILIO_ACCOUNT_SID')
-            auth_token  = os.getenv("TWILIO_AUTH_TOKEN")
+            twilio_account_sid = os.getenv('TWILIO_ACCOUNT_SID')
+            twilio_auth_token = os.getenv("TWILIO_AUTH_TOKEN")
             # client = Client(account_sid, auth_token)
 
             # verification = client.verify \
@@ -63,10 +63,10 @@ class CSVUploadView(APIView):
             # Process each row
             for row in csv_data:
                 initial_digits = row["number"][0:3]
-                if(initial_digits != "+91"):
+                if (initial_digits != "+91"):
                     row["number"] = "+91"+row["number"]
-                print("calling : " + row["id"] +" , "+ row["number"])
-                    
+                print("calling : " + row["id"] + " , " + row["number"])
+
                 # data
                 data = {
                     "name": row["name"],
@@ -88,7 +88,8 @@ class CSVUploadView(APIView):
                     # print(response.text)
 
             return Response(
-                {'message': 'CSV file processed successfully','response': response.json()},
+                {'message': 'CSV file processed successfully',
+                    'response': response.json()},
                 status=status.HTTP_200_OK
             )
 
@@ -99,6 +100,63 @@ class CSVUploadView(APIView):
             )
 
 
-class ReceiveMessages(APIView):
+class ReceiveLeadData(APIView):
     def post(self, request):
         print('hi')
+
+
+class SendOtp(APIView):
+    def post(self, request):
+        twilio_account_sid = os.getenv('TWILIO_ACCOUNT_SID')
+        twilio_auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+        twilio_otp_service_id = os.getenv("TWILIO_OTP_SERVICE_ID")
+        client = Client(twilio_account_sid, twilio_auth_token)
+        # number = request.data["function"]["parameters"]
+        
+        try:
+            otp_verification = client.verify.v2.services(twilio_otp_service_id).verifications.create(
+                to = "+917989409481", channel="sms"
+            )
+            
+            return Response(
+                    {'response': "otp has been generated"},
+                    status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            return Response(
+                {'response': {e}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )  
+            
+              
+class VerifyOtp(APIView):
+    def post(self, request):
+        twilio_account_sid = os.getenv('TWILIO_ACCOUNT_SID')
+        twilio_auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+        twilio_otp_service_id = os.getenv("TWILIO_OTP_SERVICE_ID")
+        
+        client = Client(twilio_account_sid, twilio_auth_token)
+        # number = request.data["function"]["parameters"]
+        # otp_code = request.data["function"]["parameters"]
+        
+        otp_code = int(request.data["number"])
+        
+        try:
+            otp_check = client.verify.v2.services(twilio_otp_service_id).verification_checks.create(
+                to = "+917989409481", code=otp_code
+            )
+            
+            return Response(
+                    {'response': otp_check.status},
+                    status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            return Response(
+                {'response': {e}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )    
+            
+       
+
