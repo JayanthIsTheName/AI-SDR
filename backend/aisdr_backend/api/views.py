@@ -40,10 +40,10 @@ class CSVUploadView(APIView):
             # ----- Vapi settings -------
 
             # Your Vapi API Authorization token
-            auth_token = '73ef3461-5cc9-460a-b348-5896b9ce182e'
+            auth_token = os.getenv("VAPI_AUTH_TOKEN")
             assisstant_id = os.getenv("VAPI_ASSISSTANT_ID")
             # The Phone Number ID, and the Customer details for the call
-            phone_number_id = 'ee62b2b4-0997-4c94-a33a-44ed9f2b7602'
+            phone_number_id = os.getenv("VAPI_PHONE_ID")
 
             # Create the header with Authorization token
             headers = {
@@ -103,39 +103,6 @@ class CSVUploadView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    def get(self, request):
-        # ----- Vapi settings -------
-
-        # Your Vapi API Authorization token
-        auth_token = '73ef3461-5cc9-460a-b348-5896b9ce182e'
-        # The Phone Number ID, and the Customer details for the call
-        phone_number_id = 'ee62b2b4-0997-4c94-a33a-44ed9f2b7602'
-
-        # Create the header with Authorization token
-        headers = {
-            'Authorization': f'Bearer {auth_token}',
-            'Content-Type': 'application/json',
-        }
-        # data
-        data = {
-            "name": "call-test",
-            "assistantId": "846a571e-2a75-463c-a587-a6cc4a992466",
-            "phoneNumberId": phone_number_id,
-            "customer": {
-                "number": "+919871595724"
-            }
-
-        }
-        # Make the POST request to Vapi to create the phone call
-        response = requests.post(
-            'https://api.vapi.ai/call/phone', headers=headers, json=data)
-        # Check if the request was successful and print the response
-        if response.status_code == 201:
-            print('Call created successfully')
-            # print(response.json())
-        else:
-            print('Failed to create call')
-            # print(response.text)
 
 class ReceiveMessages(APIView):
     def post(self, request):
