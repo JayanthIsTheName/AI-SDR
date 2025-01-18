@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-from django.shortcuts import render
-
-# Create your views here.
-=======
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -107,4 +102,3 @@ class CSVUploadView(APIView):
 class ReceiveMessages(APIView):
     def post(self, request):
         print('hi')
->>>>>>> 68a74c0 (the calling functionality is added)
