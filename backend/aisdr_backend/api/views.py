@@ -149,18 +149,31 @@ class VerifyOtp(APIView):
             otp_check = client.verify.v2.services(twilio_otp_service_id).verification_checks.create(
                 to= number, code=otp_code
             )
-
-            return Response(
-                {
-                    "results": [
-                        {
-                            "toolCallId" : toolCallId,
-                            "result": otp_check.status
-                        }
-                    ]
-                },
-                status=status.HTTP_200_OK
-            )
+            
+            if(otp_check.status == "approved"):
+                return Response(
+                    {
+                        "results": [
+                            {
+                                "toolCallId" : toolCallId,
+                                "result": "verification successful"
+                            }
+                        ]
+                    },
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    {
+                        "results": [
+                            {
+                                "toolCallId" : toolCallId,
+                                "result": "verification failed"
+                            }
+                        ]
+                    },
+                    status=status.HTTP_200_OK
+                )
 
         except Exception as e:
             return Response(
