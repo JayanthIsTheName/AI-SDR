@@ -87,11 +87,6 @@ class CSVUploadView(APIView):
             )
 
 
-class ReceiveLeadData(APIView):
-    def post(self, request):
-        print('hi')
-
-
 class SendOtp(APIView):
     def post(self, request):
         twilio_account_sid = os.getenv('TWILIO_ACCOUNT_SID')
@@ -160,7 +155,7 @@ class VerifyOtp(APIView):
                     "results": [
                         {
                             "toolCallId" : toolCallId,
-                            "result": "otp verified successfully"
+                            "result": otp_check.status
                         }
                     ]
                 },
@@ -172,3 +167,8 @@ class VerifyOtp(APIView):
                 {'response': {e}},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class LeadData(APIView):
+    def post(self, request):
+        print('hi')
