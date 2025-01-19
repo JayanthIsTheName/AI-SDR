@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.parsers import JSONParser
 import csv
 import io
 import requests
@@ -8,6 +9,8 @@ from twilio.rest import Client
 import os
 import json
 
+from .models import Leads
+from .serializers import LeadsSerializers
 
 class CSVUploadView(APIView):
     def post(self, request):
