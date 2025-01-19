@@ -79,10 +79,16 @@ WSGI_APPLICATION = 'aisdr_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+import pymysql
+pymysql.install_as_MySQLdb()
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'aisdr',
+        'USER': 'admin',
+        'PASSWORD': 'ITSALONGRANDOMpassword',
+        'HOST': 'aisdr-db.craykuc0wdcl.ap-south-1.rds.amazonaws.com',
+        'PORT': '3306'
     }
 }
 
