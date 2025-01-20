@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
-import "./App.css";
 import {
   Container,
   Typography,
@@ -13,27 +12,40 @@ import {
   TableRow,
   Paper,
   Box,
-  Grid,
+  IconButton,
+  Tooltip,
+  Alert,
+  Snackbar,
+  useTheme,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import GetAppIcon from "@mui/icons-material/GetApp";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 const App = () => {
-  const apiUrl = process.env.REACT_APP_DEV_API
-
+  const theme = useTheme();
+  const apiUrl = process.env.REACT_APP_DEV_API;
   const [file, setFile] = useState(null);
   const [tableData, setTableData] = useState([]);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const fileInputRef = useRef(null);
 
-  // Handle file input change
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
   };
 
-  // Handle CSV file upload
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
   const handleUpload = async () => {
     if (!file) {
-      alert("Please select a CSV file.");
+      showSnackbar('Please select a CSV file.', 'warning');
       return;
     }
 
@@ -41,158 +53,213 @@ const App = () => {
     formData.append("file", file);
 
     try {
-      const response = await axios.post(
-        `${apiUrl}/upload-csv/`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      alert(response.data.message);
-      setFile(null); // Clear the file input
+      const response = await axios.post(`${apiUrl}/upload-csv/`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      showSnackbar(response.data.message, 'success');
+      setFile(null);
+      fileInputRef.current.value = "";
     } catch (error) {
-      alert("Error uploading fie.");
+      showSnackbar('Error uploading file.', 'error');
       console.error(error);
     }
   };
 
-  // Fetch data from the backend
   const handleGetData = async () => {
     try {
       const response = await axios.get(`${apiUrl}/leads/`);
       setTableData(response.data);
+      showSnackbar('Data fetched successfully!', 'success');
     } catch (error) {
-      alert("Error fetching data.");
+      showSnackbar('Error fetching data.', 'error');
       console.error(error);
     }
   };
 
-  // Delete all data from the backend
   const handleDeleteData = async () => {
     try {
       const response = await axios.delete(`${apiUrl}/leads/`);
-      alert(response.data.message);
-      setTableData([]); // Clear the table data
+      showSnackbar(response.data.message, 'success');
+      setTableData([]);
     } catch (error) {
-      alert("Error deleting data.");
+      showSnackbar('Error deleting data.', 'error');
       console.error(error);
     }
   };
 
   return (
-    <Container maxWidth="md">
-      <Box
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Paper
+        elevation={0}
         sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center", // Align horizontally to center
-          justifyContent: "flex-start", // Align vertically to top
-          minHeight: "100vh", // Ensure the container takes full viewport height
-          pt: 4, // Add padding at the top
+          borderRadius: 4,
+          p: 4,
+          backgroundColor: 'background.default',
+          minHeight: '100vh',
         }}
       >
-        {/* Title */}
-        <Typography variant="h4" component="h1" gutterBottom>
-          AI AGENT
-        </Typography>
-
-        {/* File Input Section */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            mb: 4,
-          }}
-        >
-          <input
-            accept=".csv"
-            style={{ display: "none" }}
-            id="file-upload"
-            type="file"
-            onChange={handleFileChange}
-          />
-          <label htmlFor="file-upload">
-            <Button
-              variant="contained"
-              component="span"
-              startIcon={<CloudUploadIcon />}
-              sx={{ mr: 2 }}
-            >
-              Choose File
-            </Button>
-          </label>
-          <Typography variant="body1" sx={{ ml: 2 }}>
-            {file ? `File Chosen: ${file.name}` : "No file chosen"}
+        {/* Header Section */}
+        <Box sx={{ mb: 6, textAlign: 'center' }}>
+          <Typography
+            variant="h3"
+            component="h1"
+            gutterBottom
+            sx={{
+              fontWeight: 700,
+              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              backgroundClip: 'text',
+              textFillColor: 'transparent',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            AI AGENT DASHBOARD
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary">
+            Upload your CSV data to get started with the AI Agent
           </Typography>
         </Box>
 
-        {/* Upload Button */}
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleUpload}
-          sx={{ mb: 4 }}
+        {/* File Upload Section */}
+        <Paper
+          elevation={2}
+          sx={{
+            p: 4,
+            mb: 4,
+            borderRadius: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            backgroundColor: 'background.paper',
+          }}
         >
-          Upload CSV
-        </Button>
+          <Box sx={{ width: '100%', maxWidth: 600, mb: 3 }}>
+            <input
+              accept=".csv"
+              style={{ display: 'none' }}
+              id="file-upload"
+              type="file"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+            />
+            <label htmlFor="file-upload">
+              <Button
+                variant="outlined"
+                component="span"
+                startIcon={<UploadFileIcon />}
+                fullWidth
+                sx={{
+                  height: 56,
+                  borderStyle: 'dashed',
+                  borderWidth: 2,
+                  '&:hover': {
+                    borderStyle: 'dashed',
+                    borderWidth: 2,
+                  },
+                }}
+              >
+                {file ? file.name : 'Choose CSV File'}
+              </Button>
+            </label>
+          </Box>
 
-        {/* Buttons for Get Data and Delete Data */}
-        <Box sx={{ mb: 4 }}>
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<GetAppIcon />}
-            onClick={handleGetData}
-            sx={{ mr: 2 }}
-          >
-            Get Data
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={handleDeleteData}
-          >
-            Delete Data
-          </Button>
-        </Box>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="contained"
+              onClick={handleUpload}
+              startIcon={<CloudUploadIcon />}
+              sx={{ px: 4 }}
+            >
+              Upload
+            </Button>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={handleGetData}
+              startIcon={<GetAppIcon />}
+              sx={{ px: 4 }}
+            >
+              Fetch Data
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleDeleteData}
+              startIcon={<DeleteIcon />}
+              sx={{ px: 4 }}
+            >
+              Clear Data
+            </Button>
+          </Box>
+        </Paper>
 
-        {/* Table to Display Data */}
-        <TableContainer component={Paper} elevation={3} sx={{ width: "100%" }}>
-          <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        {/* Data Table */}
+        <TableContainer
+          component={Paper}
+          elevation={2}
+          sx={{
+            borderRadius: 2,
+            overflow: 'hidden',
+          }}
+        >
+          <Table sx={{ minWidth: 650 }}>
             <TableHead>
-              <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                <TableCell sx={{ fontWeight: "bold" }}>ID</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>First Name</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Last Name</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Firm Name</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Designation</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  Annual Turnover
-                </TableCell>
+              <TableRow sx={{ backgroundColor: 'primary.main' }}>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>First Name</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Last Name</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>DOB</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Firm Name</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Firm Type</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Designation</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>GSTIN</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Annual Turnover</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Property Ownership</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {tableData.map((row) => (
+              {tableData.map((row, index) => (
                 <TableRow
-                  key={row.id}
-                  sx={{ "&:nth-of-type(odd)": { backgroundColor: "#fafafa" } }}
+                  key={row.id || index}
+                  sx={{
+                    '&:nth-of-type(odd)': { backgroundColor: 'action.hover' },
+                    '&:hover': { backgroundColor: 'action.selected' },
+                    transition: 'background-color 0.2s',
+                  }}
                 >
-                  <TableCell>{row.id}</TableCell>
                   <TableCell>{row.first_name}</TableCell>
                   <TableCell>{row.last_name}</TableCell>
+                  <TableCell>{row.dob}</TableCell>
                   <TableCell>{row.firm_name}</TableCell>
+                  <TableCell>{row.firm_type}</TableCell>
                   <TableCell>{row.designation}</TableCell>
+                  <TableCell>{row.gstin}</TableCell>
                   <TableCell>{row.annual_turnover}</TableCell>
+                  <TableCell>{row.property_ownership}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
-      </Box>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert
+            onClose={handleSnackbarClose}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Paper>
     </Container>
   );
 };
