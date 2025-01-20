@@ -138,6 +138,8 @@ class VerifyOtp(APIView):
 
         client = Client(twilio_account_sid, twilio_auth_token)
         
+        print(request.data)
+        
         otp_code = int(request.data["message"]["toolCalls"][0]["function"]["arguments"]["otp"])
         number = request.data["message"]["toolCalls"][0]["function"]["arguments"]["number"]
         initial_digits = number[0:3]
@@ -192,7 +194,10 @@ class LeadData(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request):
-        serializer = LeadsSerializers(data=request.data)
+        print(request.data)
+        structured_data = request.data["message"]["analysis"]["structuredData"]
+        print(structured_data)
+        serializer = LeadsSerializers(data=structured_data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)

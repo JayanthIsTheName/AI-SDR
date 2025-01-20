@@ -20,6 +20,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import GetAppIcon from "@mui/icons-material/GetApp";
 
 const App = () => {
+  const apiUrl = process.env.REACT_APP_DEV_API
+
   const [file, setFile] = useState(null);
   const [tableData, setTableData] = useState([]);
 
@@ -40,7 +42,7 @@ const App = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/upload-csv/",
+        `${apiUrl}/upload-csv/`,
         formData,
         {
           headers: {
@@ -51,7 +53,7 @@ const App = () => {
       alert(response.data.message);
       setFile(null); // Clear the file input
     } catch (error) {
-      alert("Error uploading file.");
+      alert("Error uploading fie.");
       console.error(error);
     }
   };
@@ -59,7 +61,7 @@ const App = () => {
   // Fetch data from the backend
   const handleGetData = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/get-data/");
+      const response = await axios.get(`${apiUrl}/leads/`);
       setTableData(response.data);
     } catch (error) {
       alert("Error fetching data.");
@@ -70,7 +72,7 @@ const App = () => {
   // Delete all data from the backend
   const handleDeleteData = async () => {
     try {
-      const response = await axios.delete("http://localhost:8000/delete-data/");
+      const response = await axios.delete(`${apiUrl}/leads/`);
       alert(response.data.message);
       setTableData([]); // Clear the table data
     } catch (error) {
