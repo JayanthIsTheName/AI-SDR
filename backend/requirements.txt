@@ -8,4 +8,7 @@ pytz
 sqlparse
 psycopg2-binary
 python-dotenv
+twilio
+requests
+pymysql
 
